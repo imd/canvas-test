@@ -1,3 +1,4 @@
+var NUM_BALLS = 2;
 var CTX;
 var WIDTH;
 var HEIGHT;
@@ -52,30 +53,44 @@ Circle.prototype.set_pos = function (x, y) {
     this.y = y;
 };
 
-Circle.prototype.move = function (dx, dy) {
+Circle.prototype.handle_wall_collisions = function () {
     var x = this.x,
         y = this.y,
         radius = this.radius;
 
-    if (x + radius + dx > WIDTH || x - radius + dx < 0) {
-        this.dx = -dx;
-    }
-    if (y + radius + dy > HEIGHT || y - radius + dy < 0) {
-        this.dy = -dy;
-    }
-    this.x += dx;
-    this.y += dy;
+    if (x + radius > WIDTH || x - radius < 0)
+        this.dx = -this.dx;
+    if (y + radius > HEIGHT || y - radius < 0)
+        this.dy = -this.dy;
 };
 
-Circle.prototype.move_normally = function () {
-    this.move(this.dx, this.dy);
+Circle.prototype.handle_ball_collisions = function (other) {
+    var dx, dy, radii;
+
+    if (this == other)
+        return;
+    dist_x = other.x - this.x;
+    dist_y = other.y - this.y;
+    radii = this.radius + other.radius;
+    // Compare the square of the distance with the square of the combined
+    // radii.  If the former is <= the latter, balls intersect.
+    if (dist_x * dist_x + dist_y * dist_y <= radii * radii) {
+        // If ball is hitting the top or bottom of the other
+        if (   this.x >= other.x - other.radius
+            && this.x <= other.x + other.radius) {
+            this.dx = -this.dx;
+        }
+        // If ball is hitting the side of the other
+        if (   this.y >= other.y - other.radius
+            && this.y <= other.y + other.radius) {
+            this.dy = -this.dy;
+        }
+    }
 };
 
-Circle.prototype.randomize_motion = function () {
-    this.update_polar();
-    this.speed += Math.random() - 0.5;
-    this.heading += 2*Math.PI*Math.random() - Math.PI;
-    this.update_cartesian();
+Circle.prototype.move = function () {
+    this.x += this.dx;
+    this.y += this.dy;
 };
 
 Circle.prototype.draw = function () {
@@ -90,19 +105,29 @@ function clear() {
 }
 
 function draw() {
+    var i, j, circle1, circle2;
+
     clear();
-    CIRCLES.forEach(function (circle) {
-        if (TICK % 1000 === 0) {
-            circle.randomize_motion();
+    for (i = 0; i < CIRCLES.length; i++) {
+        circle1 = CIRCLES[i];
+        circle1.move();
+        circle1.handle_wall_collisions();
+    }
+    for (i = 0; i < CIRCLES.length; i++) {
+        circle1 = CIRCLES[i];
+        for (j = 0; j < CIRCLES.length; j++) {
+            circle2 = CIRCLES[j];
+            circle1.handle_ball_collisions(circle2);
         }
-        if (Math.random() * 100 < 0.035) { //0.035% chance of teleporting
-            circle.set_pos(Math.random() * WIDTH, Math.random() * HEIGHT);
-        }
-        circle.move_normally();
-        circle.draw();
-    });
+        circle1.draw();
+    }
     $('#tick').html(TICK);
     ++TICK;
+}
+
+/* Choose an element from an Array at random */
+function random_elt(choices) {
+    return choices[Math.floor(Math.random() * choices.length)];
 }
 
 function init() {
@@ -112,12 +137,14 @@ function init() {
     WIDTH = canvas.width;
     HEIGHT = canvas.height;
 
-    for (i = 0; i < 5; i++) {
-        CIRCLES.push(new Circle(Math.random() * WIDTH,
-                                Math.random() * HEIGHT,
-                                10,
-                                1 + Math.random(),
-                                2*Math.PI*Math.random() - Math.PI));
+    for (i = 0; i < NUM_BALLS; i++) {
+        CIRCLES.push(new Circle(
+            Math.random() * WIDTH,
+            Math.random() * HEIGHT,
+            10,
+            1,
+            random_elt([1, 3, 5, 7]) * Math.PI/4
+        ));
     }
     return setInterval(draw, 10);
 }
