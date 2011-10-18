@@ -2,7 +2,12 @@ var NUM_BALLS = 2;
 var CTX;
 var WIDTH;
 var HEIGHT;
+var MIN_X;
+var MIN_Y;
+var MAX_X;
+var MAX_Y;
 var CIRCLES = [];
+var GUN;
 var TICK = 0;
 
 /**
@@ -100,6 +105,21 @@ Circle.prototype.draw = function () {
     CTX.fill();
 };
 
+function Gun(x, y, w, h) {
+    this.x = x;
+    this.y = y;
+    this.w = w;
+    this.h = h;
+}
+
+Gun.prototype.draw = function () {
+  CTX.beginPath();
+  CTX.rect(this.x - (this.w / 2), this.y - (this.h / 2),
+           this.w, this.h);
+  CTX.closePath();
+  CTX.fill();
+}
+
 function clear() {
     CTX.clearRect(0, 0, WIDTH, HEIGHT);
 }
@@ -121,8 +141,28 @@ function draw() {
         }
         circle1.draw();
     }
+    GUN.draw();
     $('#tick').html(TICK);
     ++TICK;
+}
+
+/* Put gun under mouse */
+function on_mouse_move(evt) {
+  if (   evt.pageX > MIN_X && evt.pageX < MAX_X
+      && evt.pageY > MIN_Y && evt.pageY < MAX_Y) {
+      GUN.x = evt.pageX - MIN_X;
+      GUN.y = evt.pageY - MIN_Y;
+  }
+}
+
+/* Flip gun on space bar press */
+function on_key_down(evt) {
+    var tmp;
+    if (evt.keyCode == 32) {
+        tmp = GUN.w;
+        GUN.w = GUN.h;
+        GUN.h = tmp;
+    }
 }
 
 /* Choose an element from an Array at random */
@@ -133,10 +173,16 @@ function random_elt(choices) {
 function init() {
     var canvas = $("#canvas")[0],
         i;
+
+    $(document).mousemove(on_mouse_move);
+    $(document).keydown(on_key_down);
     CTX = canvas.getContext("2d");
     WIDTH = canvas.width;
     HEIGHT = canvas.height;
-
+    MIN_X = $("#canvas").offset().left;
+    MIN_Y = $("#canvas").offset().top;
+    MAX_X = MIN_X + WIDTH;
+    MAX_Y = MIN_Y + WIDTH;
     for (i = 0; i < NUM_BALLS; i++) {
         CIRCLES.push(new Circle(
             Math.random() * WIDTH,
@@ -146,5 +192,6 @@ function init() {
             random_elt([1, 3, 5, 7]) * Math.PI/4
         ));
     }
+    GUN = new Gun(WIDTH / 2, HEIGHT / 2, 50, 10);
     return setInterval(draw, 10);
 }
