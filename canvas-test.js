@@ -6,7 +6,7 @@ var MIN_X;
 var MIN_Y;
 var MAX_X;
 var MAX_Y;
-var CIRCLES = [];
+var BALLS = [];
 var GUN;
 var TICK = 0;
 
@@ -32,7 +32,7 @@ function polar_to_cartesian(magnitude, angle) {
             y: magnitude * Math.sin(angle)};
 }
 
-function Circle(x, y, radius, speed, heading) {
+function Ball(x, y, radius, speed, heading) {
     this.x = restrict_range(x, radius, WIDTH - radius);
     this.y = restrict_range(y, radius, HEIGHT - radius);
     this.radius = radius;
@@ -41,24 +41,24 @@ function Circle(x, y, radius, speed, heading) {
     this.update_cartesian();
 }
 
-Circle.prototype.update_cartesian = function () {
+Ball.prototype.update_cartesian = function () {
     var cartesian = polar_to_cartesian(this.speed, this.heading);
     this.dx = cartesian.x;
     this.dy = cartesian.y;
 };
 
-Circle.prototype.update_polar = function () {
+Ball.prototype.update_polar = function () {
     var polar = cartesian_to_polar(this.dx, this.dy);
     this.speed = polar.magnitude;
     this.heading = polar.angle;
 };
 
-Circle.prototype.set_pos = function (x, y) {
+Ball.prototype.set_pos = function (x, y) {
     this.x = x;
     this.y = y;
 };
 
-Circle.prototype.handle_wall_collisions = function () {
+Ball.prototype.handle_wall_collisions = function () {
     var x = this.x,
         y = this.y,
         radius = this.radius;
@@ -69,7 +69,7 @@ Circle.prototype.handle_wall_collisions = function () {
         this.dy = -this.dy;
 };
 
-Circle.prototype.handle_ball_collisions = function (other) {
+Ball.prototype.handle_ball_collisions = function (other) {
     var dx, dy, radii;
 
     if (this == other)
@@ -93,12 +93,12 @@ Circle.prototype.handle_ball_collisions = function (other) {
     }
 };
 
-Circle.prototype.move = function () {
+Ball.prototype.move = function () {
     this.x += this.dx;
     this.y += this.dy;
 };
 
-Circle.prototype.draw = function () {
+Ball.prototype.draw = function () {
     CTX.beginPath();
     CTX.arc(this.x, this.y, this.radius, 0, 2*Math.PI, true);
     CTX.closePath();
@@ -125,21 +125,21 @@ function clear() {
 }
 
 function draw() {
-    var i, j, circle1, circle2;
+    var i, j, ball1, ball2;
 
     clear();
-    for (i = 0; i < CIRCLES.length; i++) {
-        circle1 = CIRCLES[i];
-        circle1.move();
-        circle1.handle_wall_collisions();
+    for (i = 0; i < BALLS.length; i++) {
+        ball1 = BALLS[i];
+        ball1.move();
+        ball1.handle_wall_collisions();
     }
-    for (i = 0; i < CIRCLES.length; i++) {
-        circle1 = CIRCLES[i];
-        for (j = 0; j < CIRCLES.length; j++) {
-            circle2 = CIRCLES[j];
-            circle1.handle_ball_collisions(circle2);
+    for (i = 0; i < BALLS.length; i++) {
+        ball1 = BALLS[i];
+        for (j = 0; j < BALLS.length; j++) {
+            ball2 = BALLS[j];
+            ball1.handle_ball_collisions(ball2);
         }
-        circle1.draw();
+        ball1.draw();
     }
     GUN.draw();
     $('#tick').html(TICK);
@@ -184,7 +184,7 @@ function init() {
     MAX_X = MIN_X + WIDTH;
     MAX_Y = MIN_Y + WIDTH;
     for (i = 0; i < NUM_BALLS; i++) {
-        CIRCLES.push(new Circle(
+        BALLS.push(new Ball(
             Math.random() * WIDTH,
             Math.random() * HEIGHT,
             10,
