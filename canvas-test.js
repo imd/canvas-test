@@ -189,7 +189,7 @@ function init() {
             Math.random() * HEIGHT,
             10,
             1,
-            random_elt([1, 3, 5, 7]) * Math.PI/4
+            2 * Math.PI * Math.random()
         ));
     }
     GUN = new Gun(WIDTH / 2, HEIGHT / 2, 50, 10);
