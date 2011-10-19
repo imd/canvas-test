@@ -4,7 +4,11 @@
     <meta charset="utf-8">
     <title>Canvas Test</title>
     <style>
-      canvas { background: #EEE; }
+      canvas {
+          /* background: #452b25; */
+          background: url(images/royal-gate.gif);
+          cursor: none;
+      }
     </style>
     <script src="jquery-1.5.2.js"></script>
     <script src="canvas-test.js"></script>
@@ -15,7 +19,7 @@ $(document).ready(function () {
     </script>
   </head>
   <body>
-    <canvas id="canvas" width="480" height="800"></canvas>
+    <canvas id="canvas" width="480" height="480"></canvas>
     <div id="tick"></div>
   </body>
 </html>
