@@ -2,14 +2,17 @@ var NUM_BALLS      =  5
 var BALL_DIAMETER  = 16
 var BALL_SPEED     =  2
 var BALL_COLOR     = "#592f2d"
-var BALL_SPRITE    = 'images/spinning-globe.png'
+var BALL_SPRITE    = Image();
 var GUN_LENGTH     = 44
 var GUN_WIDTH      = 14
 var GUN_COLOR      = "#9dacb2"
-var GUN_SPRITE_H   = 'images/gun-horiz.png'
-var GUN_SPRITE_V   = 'images/gun-vert.png'
+var GUN_SPRITE_V   = Image();
+var GUN_SPRITE_H   = Image();
 var BARRIER_WIDTH  = GUN_WIDTH - 4
 var TICK_LENGTH_MS = 10
+BALL_SPRITE.src    = 'images/spinning-globe.png'
+GUN_SPRITE_H.src   = 'images/gun-horiz.png'
+GUN_SPRITE_V.src   = 'images/gun-vert.png'
 
 var CTX;
 var WIDTH;
@@ -46,17 +49,16 @@ function polar_to_cartesian(magnitude, angle) {
             y: magnitude * Math.sin(angle)};
 }
 
-function Ball(x, y, radius, speed, heading, color, img_src) {
+function Ball(x, y, radius, speed, heading, color, img) {
     this.x = restrict_range(x, radius, WIDTH - radius);
     this.y = restrict_range(y, radius, HEIGHT - radius);
     this.radius = radius;
     this.speed = speed;
     this.heading = heading;
     this.color = color || "#000";
-    if (img_src) {
+    if (img) {
         this.use_sprite = true;
-        this.img = new Image();
-        this.img.src = img_src;
+        this.img = img;
         this.img.frame_size = this.radius * 2;
         this.img.num_frames = this.img.width / this.img.frame_size;
         this.img.frame = Math.floor(Math.random() * this.img.num_frames);
@@ -191,10 +193,8 @@ function Gun(x, y, horizontal_p, color) {
     this.h = horizontal_p ? GUN_WIDTH : GUN_LENGTH;
     this.color = color || "#000";
     this.use_sprite = true;
-    this.sprite_h = Image();
-    this.sprite_h.src = GUN_SPRITE_H;
-    this.sprite_v = Image();
-    this.sprite_v.src = GUN_SPRITE_V;
+    this.sprite_h = GUN_SPRITE_H;
+    this.sprite_v = GUN_SPRITE_V;
 }
 
 Gun.prototype.draw = function () {
