@@ -54,6 +54,7 @@ function Ball(x, y, radius, speed, heading, color, img_src) {
     this.heading = heading;
     this.color = color || "#000";
     if (img_src) {
+        this.use_sprite = true;
         this.img = new Image();
         this.img.src = img_src;
         this.img.frame_size = this.radius * 2;
@@ -155,7 +156,7 @@ Ball.prototype.move = function () {
 };
 
 Ball.prototype.draw = function () {
-    if (!this.img) {
+    if (!this.use_sprite) {
         CTX.fillStyle = this.color;
         CTX.beginPath();
         CTX.arc(this.x, this.y, this.radius, 0, 2 * Math.PI, true);
@@ -189,13 +190,15 @@ function Gun(x, y, horizontal_p, color) {
     this.w = horizontal_p ? GUN_LENGTH : GUN_WIDTH;
     this.h = horizontal_p ? GUN_WIDTH : GUN_LENGTH;
     this.color = color || "#000";
-    this.sprite_h = GUN_SPRITE_H;
-    this.sprite_v = GUN_SPRITE_V;
-    this.img = new Image();
+    this.use_sprite = true;
+    this.sprite_h = Image();
+    this.sprite_h.src = GUN_SPRITE_H;
+    this.sprite_v = Image();
+    this.sprite_v.src = GUN_SPRITE_V;
 }
 
 Gun.prototype.draw = function () {
-    if (!this.img) {
+    if (!this.use_sprite) {
         CTX.fillStyle = this.color;
         CTX.beginPath();
         CTX.fillRect(this.x - (this.w / 2), this.y - (this.h / 2),
@@ -203,9 +206,8 @@ Gun.prototype.draw = function () {
         CTX.closePath();
         CTX.fill();
     } else {
-        var img = this.img;
+        var img = (this.horizontal_p) ? this.sprite_h : this.sprite_v;
 
-        img.src = (this.horizontal_p) ? this.sprite_h : this.sprite_v;
         CTX.drawImage(
             img,
             0, 0, img.width, img.height,
