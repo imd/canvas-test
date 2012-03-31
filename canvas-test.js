@@ -92,9 +92,9 @@ Ball.prototype.handle_wall_collisions = function () {
 };
 
 Ball.prototype.handle_ball_collisions = function (other) {
-    var dx, dy, radii;
+    var dist_x, dist_y, radii;
 
-    if (this == other)
+    if (this === other)
         return;
     dist_x = other.x - this.x;
     dist_y = other.y - this.y;
@@ -103,6 +103,14 @@ Ball.prototype.handle_ball_collisions = function (other) {
     // radii.  If the former is <= the latter, balls intersect.
     if (dist_x * dist_x + dist_y * dist_y <= radii * radii) {
         // If ball is hitting the top or bottom of the other
+        /*
+               |       | other
+               +-------+
+                   ^
+                   |     ball center is between other's left and right edges
+               +-------+
+               |       | this
+         */
         if (   this.x >= other.x - other.radius
             && this.x <= other.x + other.radius) {
             this.dx = -this.dx;
@@ -112,6 +120,32 @@ Ball.prototype.handle_ball_collisions = function (other) {
             && this.y <= other.y + other.radius) {
             this.dy = -this.dy;
         }
+    }
+};
+
+Ball.prototype.collide = Ball.prototype.handle_ball_collisions;
+
+function le() {
+    for (var i = 1; i < arguments.length; i++)
+        if (!(arguments[i - 1] <= arguments[i]))
+            return false;
+    return true;
+}
+
+Ball.prototype.handle_filled_collisions = function (fa) {
+    var x1 = this.x - this.radius,
+        x2 = this.x + this.radius,
+        y1 = this.y - this.radius,
+        y2 = this.y + this.radius;
+    // If ball is hitting the top or bottom of the filled area
+    if ((le(fa.y1, y1, fa.y2) || le(fa.y1, y2, fa.y2))
+        && this.radius >= fa.x1 && this.radius <= fa.x2) {
+        this.dy = -this.dy;
+    }
+    // If ball is hitting a side of the filled area
+    if ((le(fa.x1, x1, fa.x2) || le(fa.x1, x2, fa.x2))
+        && this.radius >= fa.y1 && this.radius <= fa.y2) {
+        this.dx = -this.dx;
     }
 };
 
@@ -220,24 +254,20 @@ function Barrier(x, y, horizontal_p, speed, color) {
 Barrier.prototype.save = function () {
     FILLED_AREAS.push(
         new FilledArea(this.x1, this.x2, this.y1, this.y2));
-    BARRIER = undefined;
+    BARRIER = null;
 }
 
 Barrier.prototype.move = function () {
-    if (this.horizontal_p) {
-        if (this.x1 <= 0 && this.x2 >= WIDTH) {
-            this.save();
-        } else {
-            this.x1 -= this.speed;
-            this.x2 += this.speed;
-        }
+    var end1 = in_filled_area(this.x1, this.y1),
+        end2 = in_filled_area(this.x2, this.y2);
+    if (end1 && end2) {
+        this.save();
+    } else if (this.horizontal_p) {
+        if (!end1) this.x1 -= this.speed;
+        if (!end2) this.x2 += this.speed;
     } else {
-        if (this.y1 <= 0 && this.y2 >= HEIGHT) {
-            this.save();
-        } else {
-            this.y1 -= this.speed;
-            this.y2 += this.speed;
-        }
+        if (!end1) this.y1 -= this.speed;
+        if (!end2) this.y2 += this.speed;
     }
 };
 
@@ -274,33 +304,95 @@ FilledArea.prototype.draw = function () {
     CTX.fill();
 };
 
+function in_filled_area(x, y) {
+    var i, fa;
+
+    if (x < 0 || x > WIDTH || y < 0 || y > HEIGHT)
+        return true;
+    for (i = 0; i < FILLED_AREAS.length; i++) {
+        fa = FILLED_AREAS[i];
+        if (x > fa.x1 && x < fa.x2 && y > fa.y1 && y < fa.y2)
+            return fa;
+    }
+    return false;
+}
+
+function move(balls) {
+    for (var i = 0; i < balls.length; i++) {
+        balls[i].x += balls[i].dx;
+        balls[i].y += balls[i].dy;
+    }
+}
+
+function collide(balls, others) {
+    var i, j, ball, x1, x2, y1, y2;
+
+    if (others === undefined) {
+        for (i = 0; i < balls.length; i++)
+            for (j = i + 1; j < balls.length; j++)
+                balls[i].collide(balls[j]);
+    } else {
+        for (i = 0; i < balls.length; i++) {
+            ball = balls[i];
+            for (j = 0; j < others.length; j++) {
+                o = others[j];
+                x1 = ball.x - ball.radius;
+                x2 = ball.x + ball.radius;
+                y1 = ball.y - ball.radius;
+                y2 = ball.y + ball.radius;
+                // If ball is hitting the top or bottom of the other
+                if ((le(o.y1, y1, o.y2) || le(o.y1, y2, o.y2))
+                    && ball.radius >= o.x1 && ball.radius <= o.x2) {
+                    ball.dy = -ball.dy;
+                }
+                // If ball is hitting a side of the other
+                if ((le(o.x1, x1, o.x2) || le(o.x1, x2, o.x2))
+                    && ball.radius >= o.y1 && ball.radius <= o.y2) {
+                    ball.dx = -ball.dx;
+                }
+            }
+        }
+    }
+}
+
 function clear() {
     CTX.clearRect(0, 0, WIDTH, HEIGHT);
 }
 
 function draw() {
-    var i, j;
+    var i, j, ball1, ball2, fa;
 
     clear();
+    /*
+      (move balls)
+      (collide balls walls)
+      (collide balls filled-areas)
+      (collide balls barrier)
+      (collide balls)
+     */
     for (i = 0; i < BALLS.length; i++) {
         ball1 = BALLS[i];
         ball1.move();
         ball1.handle_wall_collisions();
+        if (fa = in_filled_area(ball1.x, ball1.y))
+            ball1.handle_filled_collisions(fa);
+        if (BARRIER)
+            ball1.handle_filled_collisions(BARRIER);
     }
     for (i = 0; i < BALLS.length; i++) {
         ball1 = BALLS[i];
-        for (j = 0; j < BALLS.length; j++) {
+        for (j = i + 1; j < BALLS.length; j++) {
             ball2 = BALLS[j];
             ball1.handle_ball_collisions(ball2);
         }
         ball1.draw();
     }
-    GUN.draw();
     if (BARRIER) BARRIER.move();
     if (BARRIER) BARRIER.draw();
     for (i = 0; i < FILLED_AREAS.length; i++) {
         FILLED_AREAS[i].draw();
     }
+    GUN.draw();
     ++TICK;
 }
 
