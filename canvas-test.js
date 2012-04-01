@@ -201,9 +201,9 @@ Ball.prototype.draw = function () {
 };
 
 Ball.prototype.draw_wireframe = function () {
-    CTX.fillStyle = "blue";
+    CTX.fillStyle = "rgba(0, 0, 255, 0.5)";
     CTX.beginPath();
-    CTX.arc(this.x, this.y, 1, 0, 2 * Math.PI, true);
+    CTX.arc(this.x, this.y, 1.5, 0, 2 * Math.PI, true);
     CTX.closePath();
     CTX.fill();
 };
