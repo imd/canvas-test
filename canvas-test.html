@@ -9,6 +9,9 @@
           background: url(images/royal-gate.gif);
           cursor: none;
       }
+      td {
+          vertical-align: top;
+      }
     </style>
     <script src="jquery-1.7.2.js"></script>
     <script src="canvas-test.js"></script>
@@ -19,7 +22,15 @@ $(document).ready(function () {
     </script>
   </head>
   <body>
+    <table><tr><td>
     <canvas id="canvas" width="480" height="480"></canvas>
+    </td><td>
     <div id="tick">FPS</div>
+    <div id="controls">
+      <button id="play_pause">Play/Pause</button><br>
+      <button id="step">Step</button><br>
+      <button id="reset">Reset</button>
+    </div>
+    </td></tr></table>
   </body>
 </html>
