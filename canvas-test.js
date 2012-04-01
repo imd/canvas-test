@@ -22,6 +22,9 @@ var MIN_X;
 var MIN_Y;
 var MAX_X;
 var MAX_Y;
+var FUTURE;
+var CUR_FUTURE = 0;
+var NUM_FUTURES = 100;
 var WORLD;
 var TICK = 0;
 var DRAW_INTERVAL;
@@ -415,37 +418,42 @@ World.prototype.draw = function () {
         this.filled_areas[i].draw();
     }
     this.gun.draw();
-    if (PAUSED) {
-        for (i = 0; i < this.future.length; i++) {
-            this.future[i].draw_wireframe();
-        }
-    }
-};
-
-World.prototype.draw_wireframe = function () {
-    this.balls.forEach(function(ball) {ball.draw_wireframe();});
 };
 
 World.prototype.move_and_draw = function() {
-    var new_world, i;
-
     this.move();
     this.draw();
-
-    if (!this.future) {
-        this.future = [];
-        new_world = this.clone();
-        for (i = 0; i < 100; i++) {
-            new_world.move();
-            this.future.push(new_world);
-            new_world = new_world.clone();
-        }
-    }
-    this.future.shift();
-    new_world = this.future[this.future.length - 1].clone();
-    new_world.move();
-    this.future.push(new_world);
 };
+
+function make_futures() {
+    var world, i;
+
+    FUTURE = [];
+    world = WORLD;
+    for (i = 0; i < NUM_FUTURES; i++) {
+        FUTURE.push(world);
+        world = world.clone();
+        world.move();
+    }
+}
+
+function draw_paused() {
+    var i, j;
+
+    CTX.clearRect(0, 0, WIDTH, HEIGHT);
+    for (i = 0; i < WORLD.balls.length; i++) {
+        for (j = 0; j < NUM_FUTURES; j++) {
+            FUTURE[j].balls[i].draw_wireframe();
+        }
+        FUTURE[CUR_FUTURE].balls[i].draw();
+    }
+    if (WORLD.barrier) {
+        WORLD.barrier.draw();
+    }
+    for (i = 0; i < WORLD.filled_areas.length; i++) {
+        WORLD.filled_areas[i].draw();
+    }
+}
 
 function init_world() {
     var balls = [];
@@ -476,7 +484,8 @@ function toggle_pause() {
     } else {
         PAUSED = true;
         clearInterval(DRAW_INTERVAL);
-        WORLD.draw();
+        make_futures();
+        draw_paused();
         CANVAS.style.cursor = 'auto';
     }
 }
@@ -488,6 +497,12 @@ function init_buttons() {
         init_world();
         this.blur();
     });
+    $("#future")
+        .attr({"min": 0, "max": NUM_FUTURES - 1, "value": 0})
+        .change(function () {
+            CUR_FUTURE = parseInt(this.value, 10);
+            draw_paused();
+        });
 }
 
 function FPS() {
