@@ -339,15 +339,26 @@ Barrier.prototype.draw = function () {
     CTX.fill();
 };
 
-function create_barrier(evt) {
-  if (   evt.pageX > MIN_X && evt.pageX < MAX_X
-      && evt.pageY > MIN_Y && evt.pageY < MAX_Y) {
-      if (!WORLD.barrier) {
-          WORLD.barrier = new Barrier(WORLD,
-                                      evt.pageX - MIN_X, evt.pageY - MIN_Y,
-                                      WORLD.gun.horizontal_p, BALL_SPEED);
-      }
-  }
+function create_barrier(x, y) {
+    if (!WORLD.barrier) {
+        WORLD.barrier = new Barrier(WORLD, x, y, WORLD.gun.horizontal_p,
+                                    BALL_SPEED);
+    }
+}
+
+function mousedown_handler(evt) {
+    var x, y;
+
+    /// if click is within canvas, translate to canvas coordinates
+    if (evt.pageX > MIN_X && evt.pageX < MAX_X
+        && evt.pageY > MIN_Y && evt.pageY < MAX_Y) {
+        x = evt.pageX - MIN_X;
+        y = evt.pageY - MIN_Y;
+        switch (evt.which) {
+        case 1: //left button
+            create_barrier(x, y);
+            break;
+    }
 }
 
 function World(balls, filled_areas, gun, barrier) {
@@ -515,7 +526,7 @@ function FPS() {
 
 function init() {
     $(document).mousemove(update_gun_pos);
-    $(document).mousedown(create_barrier);
+    $(document).mousedown(mousedown_handler);
     $(document).keydown(keydown_handler);
     CANVAS = $("#canvas")[0];
     CTX = CANVAS.getContext("2d");
