@@ -248,14 +248,17 @@ function update_gun_pos(evt) {
   }
 }
 
-/* Flip gun on space bar press */
-function flip_gun(evt) {
+function keydown_handler(evt) {
     var tmp;
-    if (evt.keyCode === 32) {
+
+    switch (evt.keyCode) {
+    case 32:
+        /* Flip gun on space bar press */
         WORLD.gun.horizontal_p = !WORLD.gun.horizontal_p;
         tmp = WORLD.gun.w;
         WORLD.gun.w = WORLD.gun.h;
         WORLD.gun.h = tmp;
+        break;
     }
 }
 
@@ -513,7 +516,7 @@ function FPS() {
 function init() {
     $(document).mousemove(update_gun_pos);
     $(document).mousedown(create_barrier);
-    $(document).keydown(flip_gun);
+    $(document).keydown(keydown_handler);
     CANVAS = $("#canvas")[0];
     CTX = CANVAS.getContext("2d");
     WIDTH = CANVAS.width;
