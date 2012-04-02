@@ -346,6 +346,37 @@ function create_barrier(x, y) {
     }
 }
 
+function object_at(x, y) {
+    var i, j, obj;
+
+    for (i = 0; i < NUM_FUTURES; i++) {
+        for (j = 0; j < FUTURE[0].balls.length; j++) {
+            obj = FUTURE[i].balls[j];
+            if ((x - obj.x <= Math.abs(obj.x - obj.radius))
+                    && (y - obj.y <= Math.abs(obj.y - obj.radius))) {
+                return obj;
+            }
+        }
+    }
+    if ((x - WORLD.gun.x < Math.abs(WORLD.gun.x - WORLD.gun.w)) &&
+            (y - WORLD.gun.y < Math.abs(WORLD.gun.y - WORLD.gun.w))) {
+        return WORLD.gun;
+    }
+    obj = in_filled_area(x, y);
+    if (obj) {
+        return obj;
+    }
+    if (le(WORLD.barrier.x1, x, WORLD.barrier.x2) &&
+            le(WORLD.barrier.y1, y, WORLD.barrier.y2)) {
+        return WORLD.barrier;
+    }
+    return WORLD;
+}
+
+function inspect_canvas_object(x, y) {
+    console.log(object_at(x, y));
+}
+
 function mousedown_handler(evt) {
     var x, y;
 
@@ -358,6 +389,9 @@ function mousedown_handler(evt) {
         case 1: //left button
             create_barrier(x, y);
             break;
+        case 2: //middle button
+            inspect_canvas_object(x, y);
+        }
     }
 }
 
